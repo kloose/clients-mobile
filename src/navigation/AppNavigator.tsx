@@ -61,9 +61,8 @@ const MainTabs = () => {
         },
         headerTintColor: Theme.textPrimary,
         headerTitleStyle: {
-          fontWeight: '700',
+          fontWeight: 'bold',
           fontSize: 18,
-          letterSpacing: -0.5,
         },
       })}
     >

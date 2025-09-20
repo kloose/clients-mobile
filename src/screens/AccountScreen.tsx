@@ -14,13 +14,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { userService } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
-import { useSelector } from '@legendapp/state/react';
+import { useObservable } from '@legendapp/state/react';
 import { appState$, uiActions } from '../state/store';
 
 export const AccountScreen = () => {
   const { logout } = useAuth();
-  const authUser = useSelector(appState$.auth.user);
-  const refreshing = useSelector(appState$.ui.refreshing);
+  const authUser = useObservable(appState$.auth.user);
+  const refreshing = useObservable(appState$.ui.refreshing);
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);

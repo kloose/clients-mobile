@@ -11,14 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
 import { useTraining } from '../hooks/useTraining';
-import { useSelector } from '@legendapp/state/react';
+import { useObservable } from '@legendapp/state/react';
 import { appState$, uiActions } from '../state/store';
 import { ExerciseSlot } from '../services/api';
 
 export const TrainingPlansScreen = () => {
   const { schedule, loading, error, refresh } = useTraining();
-  const expandedDays = useSelector(appState$.ui.expandedDays);
-  const refreshing = useSelector(appState$.ui.refreshing);
+  const expandedDays = useObservable(appState$.ui.expandedDays);
+  const refreshing = useObservable(appState$.ui.refreshing);
 
   const toggleDay = (weekDay: string) => {
     uiActions.toggleExpandedDay(weekDay);

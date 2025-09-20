@@ -5,7 +5,7 @@ import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH0_CONFIG, AUTH0_DOMAIN, AUTH0_CLIENT_ID } from '../config/auth';
 import { appState$, authActions } from '../state/store';
-import { useSelector } from '@legendapp/state/react';
+import { useObservable } from '@legendapp/state/react';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -31,7 +31,7 @@ const useProxy = __DEV__;
 const redirectUri = AuthSession.makeRedirectUri({ useProxy });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useSelector(appState$.auth);
+  const auth = useObservable(appState$.auth);
   const discovery = AuthSession.useAutoDiscovery(`https://${AUTH0_DOMAIN}`);
 
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
