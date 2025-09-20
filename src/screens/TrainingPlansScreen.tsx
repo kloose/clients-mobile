@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,48 +8,20 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { programService, WeeklySchedule, ExerciseSlot } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
+import { useTraining } from '../hooks/useTraining';
+import { useSelector } from '@legendapp/state/react';
+import { appState$, uiActions } from '../state/store';
+import { ExerciseSlot } from '../services/api';
 
 export const TrainingPlansScreen = () => {
-  const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    loadSchedule();
-  }, []);
-
-  const loadSchedule = async () => {
-    try {
-      setError(null);
-      const data = await programService.getMyWeeklySchedule();
-      setSchedule(data);
-    } catch (err) {
-      setError('Failed to load training schedule');
-      console.error('Error loading schedule:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadSchedule();
-  };
+  const { schedule, loading, error, refresh } = useTraining();
+  const expandedDays = useSelector(appState$.ui.expandedDays);
+  const refreshing = useSelector(appState$.ui.refreshing);
 
   const toggleDay = (weekDay: string) => {
-    const newExpanded = new Set(expandedDays);
-    if (newExpanded.has(weekDay)) {
-      newExpanded.delete(weekDay);
-    } else {
-      newExpanded.add(weekDay);
-    }
-    setExpandedDays(newExpanded);
+    uiActions.toggleExpandedDay(weekDay);
   };
 
   const renderExercise = (exercise: ExerciseSlot) => (
@@ -74,7 +46,7 @@ export const TrainingPlansScreen = () => {
     </View>
   );
 
-  if (loading) {
+  if (loading && !schedule) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Theme.accent} />
@@ -88,7 +60,7 @@ export const TrainingPlansScreen = () => {
       <View style={styles.centerContainer}>
         <Ionicons name="alert-circle-outline" size={64} color={Theme.danger} />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadSchedule}>
+        <TouchableOpacity style={styles.retryButton} onPress={refresh}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -111,7 +83,11 @@ export const TrainingPlansScreen = () => {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={refresh}
+          tintColor={Theme.accent}
+        />
       }
     >
       <View style={styles.header}>

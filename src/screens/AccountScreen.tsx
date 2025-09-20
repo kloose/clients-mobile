@@ -11,23 +11,29 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { userService, User } from '../services/api';
+import { userService } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
+import { useSelector } from '@legendapp/state/react';
+import { appState$, uiActions } from '../state/store';
 
 export const AccountScreen = () => {
-  const { user: authUser, logout } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
+  const { logout } = useAuth();
+  const authUser = useSelector(appState$.auth.user);
+  const refreshing = useSelector(appState$.ui.refreshing);
+
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editedUser, setEditedUser] = useState<Partial<User>>({});
+  const [editedUser, setEditedUser] = useState<any>({});
 
   useEffect(() => {
-    loadUserProfile();
-  }, []);
+    if (authUser) {
+      loadUserProfile();
+    }
+  }, [authUser]);
 
   const loadUserProfile = async () => {
     try {
@@ -40,12 +46,12 @@ export const AccountScreen = () => {
       console.error('Error loading profile:', err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      uiActions.setRefreshing(false);
     }
   };
 
   const onRefresh = () => {
-    setRefreshing(true);
+    uiActions.setRefreshing(true);
     loadUserProfile();
   };
 
@@ -89,7 +95,7 @@ export const AccountScreen = () => {
     );
   };
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Theme.accent} />
@@ -114,7 +120,11 @@ export const AccountScreen = () => {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={Theme.accent}
+        />
       }
     >
       <View style={styles.profileHeader}>
@@ -124,9 +134,9 @@ export const AccountScreen = () => {
         <Text style={styles.userName}>
           {user?.firstName && user?.lastName
             ? `${user.firstName} ${user.lastName}`
-            : user?.email || 'User'}
+            : authUser?.email || 'User'}
         </Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
+        <Text style={styles.userEmail}>{user?.email || authUser?.email}</Text>
       </View>
 
       <View style={styles.section}>
@@ -147,6 +157,7 @@ export const AccountScreen = () => {
               value={editedUser.firstName || ''}
               onChangeText={(text) => setEditedUser({ ...editedUser, firstName: text })}
               placeholder="Enter first name"
+              placeholderTextColor={Theme.textMuted}
             />
           ) : (
             <Text style={styles.fieldValue}>{user?.firstName || 'Not set'}</Text>
@@ -161,6 +172,7 @@ export const AccountScreen = () => {
               value={editedUser.lastName || ''}
               onChangeText={(text) => setEditedUser({ ...editedUser, lastName: text })}
               placeholder="Enter last name"
+              placeholderTextColor={Theme.textMuted}
             />
           ) : (
             <Text style={styles.fieldValue}>{user?.lastName || 'Not set'}</Text>
@@ -175,6 +187,7 @@ export const AccountScreen = () => {
               value={editedUser.phoneNumber || ''}
               onChangeText={(text) => setEditedUser({ ...editedUser, phoneNumber: text })}
               placeholder="Enter phone number"
+              placeholderTextColor={Theme.textMuted}
               keyboardType="phone-pad"
             />
           ) : (
@@ -184,7 +197,7 @@ export const AccountScreen = () => {
 
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>Email</Text>
-          <Text style={styles.fieldValue}>{user?.email}</Text>
+          <Text style={styles.fieldValue}>{user?.email || authUser?.email}</Text>
         </View>
 
         <View style={styles.field}>
@@ -206,7 +219,7 @@ export const AccountScreen = () => {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator color="white" size="small" />
+                <ActivityIndicator color={Theme.black} size="small" />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}

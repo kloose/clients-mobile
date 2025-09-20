@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH0_CONFIG, AUTH0_DOMAIN, AUTH0_CLIENT_ID } from '../config/auth';
+import { appState$, authActions } from '../state/store';
+import { useSelector } from '@legendapp/state/react';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -29,10 +31,7 @@ const useProxy = __DEV__;
 const redirectUri = AuthSession.makeRedirectUri({ useProxy });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const auth = useSelector(appState$.auth);
   const discovery = AuthSession.useAutoDiscovery(`https://${AUTH0_DOMAIN}`);
 
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
@@ -61,17 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadStoredAuth = async () => {
     try {
+      authActions.setLoading(true);
       const storedToken = await AsyncStorage.getItem('access_token');
       const storedUser = await AsyncStorage.getItem('user');
 
       if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        authActions.setToken(storedToken);
+        authActions.setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
     } finally {
-      setLoading(false);
+      authActions.setLoading(false);
     }
   };
 
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
 
       const accessToken = tokenResponse.accessToken;
-      setToken(accessToken);
+      authActions.setToken(accessToken);
       await AsyncStorage.setItem('access_token', accessToken);
 
       // Get user info
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         picture: userInfo.picture,
       };
 
-      setUser(user);
+      authActions.setUser(user as any);
       await AsyncStorage.setItem('user', JSON.stringify(user));
     } catch (error) {
       console.error('Error exchanging code for token:', error);
@@ -116,13 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = useCallback(async () => {
-    setLoading(true);
+    authActions.setLoading(true);
     try {
       await promptAsync();
     } catch (error) {
       console.error('Login error:', error);
     } finally {
-      setLoading(false);
+      authActions.setLoading(false);
     }
   }, [promptAsync]);
 
@@ -130,8 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await AsyncStorage.removeItem('access_token');
       await AsyncStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
+      authActions.logout();
 
       // Open logout URL
       await WebBrowser.openAuthSessionAsync(
@@ -146,12 +145,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        user,
-        token,
-        loading,
+        user: auth.user,
+        token: auth.token,
+        loading: auth.loading,
         login,
         logout,
-        isAuthenticated: !!token && !!user,
+        isAuthenticated: auth.isAuthenticated,
       }}
     >
       {children}

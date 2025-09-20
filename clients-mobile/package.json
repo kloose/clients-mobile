@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@expo/vector-icons": "^15.0.2"
+    "@expo/vector-icons": "^15.0.2",
+    "@legendapp/state": "^2.1.15"
   }
 }

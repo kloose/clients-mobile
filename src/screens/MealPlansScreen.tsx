@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,46 +8,26 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { mealPlanService, MealPlan, Meal } from '../services/api';
+import { Meal } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
+import { useMeals } from '../hooks/useMeals';
+import { useSelector } from '@legendapp/state/react';
+import { appState$ } from '../state/store';
 
 export const MealPlansScreen = () => {
-  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+  const {
+    currentMealPlan,
+    loading,
+    error,
+    selectedDay,
+    refresh,
+    getMealsForDay,
+    selectDay,
+  } = useMeals();
+  const refreshing = useSelector(appState$.ui.refreshing);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-  useEffect(() => {
-    loadMealPlan();
-  }, []);
-
-  const loadMealPlan = async () => {
-    try {
-      setError(null);
-      const data = await mealPlanService.getCurrentMealPlan();
-      setMealPlan(data);
-    } catch (err) {
-      setError('Failed to load meal plan');
-      console.error('Error loading meal plan:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadMealPlan();
-  };
-
-  const getMealsForDay = (day: string): Meal[] => {
-    if (!mealPlan) return [];
-    return mealPlan.meals.filter(meal => meal.dayOfWeek === day);
-  };
 
   const getMealTypeIcon = (mealType: string): keyof typeof Ionicons.glyphMap => {
     switch (mealType) {
@@ -128,7 +108,7 @@ export const MealPlansScreen = () => {
     </View>
   );
 
-  if (loading) {
+  if (loading && !currentMealPlan) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Theme.accent} />
@@ -142,14 +122,14 @@ export const MealPlansScreen = () => {
       <View style={styles.centerContainer}>
         <Ionicons name="alert-circle-outline" size={64} color={Theme.danger} />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadMealPlan}>
+        <TouchableOpacity style={styles.retryButton} onPress={refresh}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  if (!mealPlan) {
+  if (!currentMealPlan) {
     return (
       <View style={styles.centerContainer}>
         <Ionicons name="restaurant-outline" size={64} color={Theme.textMuted} />
@@ -166,10 +146,10 @@ export const MealPlansScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.planName}>{mealPlan.name}</Text>
-        {mealPlan.startDate && mealPlan.endDate && (
+        <Text style={styles.planName}>{currentMealPlan.name}</Text>
+        {currentMealPlan.startDate && currentMealPlan.endDate && (
           <Text style={styles.planDates}>
-            {new Date(mealPlan.startDate).toLocaleDateString()} - {new Date(mealPlan.endDate).toLocaleDateString()}
+            {new Date(currentMealPlan.startDate).toLocaleDateString()} - {new Date(currentMealPlan.endDate).toLocaleDateString()}
           </Text>
         )}
       </View>
@@ -186,7 +166,7 @@ export const MealPlansScreen = () => {
               styles.dayButton,
               selectedDay === day && styles.dayButtonActive
             ]}
-            onPress={() => setSelectedDay(day)}
+            onPress={() => selectDay(day)}
           >
             <Text
               style={[
@@ -203,7 +183,11 @@ export const MealPlansScreen = () => {
       <ScrollView
         style={styles.mealsContainer}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={Theme.accent}
+          />
         }
       >
         {currentDayMeals.length > 0 ? (
