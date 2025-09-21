@@ -12,7 +12,7 @@ import { Meal } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
 import { useMeals } from '../hooks/useMeals';
-import { useObservable } from '@legendapp/state/react';
+import { useSelector } from '@legendapp/state/react';
 import { appState$ } from '../state/store';
 
 export const MealPlansScreen = () => {
@@ -25,7 +25,7 @@ export const MealPlansScreen = () => {
     getMealsForDay,
     selectDay,
   } = useMeals();
-  const refreshing = useObservable(appState$.ui.refreshing);
+  const refreshing = useSelector(() => appState$.ui.refreshing.get());
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 

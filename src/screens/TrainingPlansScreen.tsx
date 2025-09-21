@@ -11,14 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../theme/colors';
 import { useTraining } from '../hooks/useTraining';
-import { useObservable } from '@legendapp/state/react';
+import { useObservable, useSelector } from '@legendapp/state/react';
 import { appState$, uiActions } from '../state/store';
 import { ExerciseSlot } from '../services/api';
 
 export const TrainingPlansScreen = () => {
   const { schedule, loading, error, refresh } = useTraining();
-  const expandedDays = useObservable(appState$.ui.expandedDays);
-  const refreshing = useObservable(appState$.ui.refreshing);
+  const expandedDays = useSelector(() => appState$.ui.expandedDays.get());
+  const refreshing = useSelector(() => appState$.ui.refreshing.get());
 
   const toggleDay = (weekDay: string) => {
     uiActions.toggleExpandedDay(weekDay);
@@ -102,7 +102,7 @@ export const TrainingPlansScreen = () => {
           <Text style={styles.weekTitle}>Week {week.weekNumber}</Text>
           {week.days.map((day) => {
             const dayKey = `${week.weekNumber}-${day.dayOfWeek}`;
-            const isExpanded = expandedDays.has(dayKey);
+            const isExpanded = expandedDays?.has(dayKey) || false;
             return (
               <View key={dayKey} style={styles.dayContainer}>
                 <TouchableOpacity

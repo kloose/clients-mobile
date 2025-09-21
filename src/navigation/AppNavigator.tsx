@@ -20,6 +20,24 @@ const navigationTheme = {
     border: Theme.border,
     notification: Theme.accent,
   },
+  fonts: {
+    regular: {
+      fontFamily: 'System',
+      fontWeight: 'normal' as const,
+    },
+    medium: {
+      fontFamily: 'System',
+      fontWeight: '500' as const,
+    },
+    bold: {
+      fontFamily: 'System',
+      fontWeight: 'bold' as const,
+    },
+    heavy: {
+      fontFamily: 'System',
+      fontWeight: '700' as const,
+    },
+  },
 };
 
 const Stack = createStackNavigator();
