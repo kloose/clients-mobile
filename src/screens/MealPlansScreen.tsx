@@ -182,6 +182,7 @@ export const MealPlansScreen = () => {
 
       <ScrollView
         style={styles.mealsContainer}
+        contentContainerStyle={styles.mealsContentContainer}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -297,6 +298,9 @@ const styles = StyleSheet.create({
   mealsContainer: {
     flex: 1,
     padding: 16,
+  },
+  mealsContentContainer: {
+    paddingBottom: 20,
   },
   mealCard: {
     backgroundColor: Theme.surfaceElevated,

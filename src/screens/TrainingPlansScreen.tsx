@@ -82,6 +82,7 @@ export const TrainingPlansScreen = () => {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -139,6 +140,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.background,
+  },
+  contentContainer: {
+    paddingBottom: 20,
   },
   centerContainer: {
     flex: 1,

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useCallback, useRef } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
@@ -32,6 +32,7 @@ const redirectUri = 'rnrtraining://callback';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useSelector(() => appState$.auth.get());
   const discovery = AuthSession.useAutoDiscovery(`https://${AUTH0_DOMAIN}`);
+  const processedCodeRef = useRef<string | null>(null);
 
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -39,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       scopes: ['openid', 'profile', 'email', 'offline_access'],
       redirectUri,
       responseType: AuthSession.ResponseType.Code,
-      codeChallenge: Crypto.randomUUID(),
       extraParams: {
         audience: AUTH0_CONFIG.audience,
       },
@@ -52,7 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    if (result?.type === 'success' && request) {
+    if (result?.type === 'success' && request && result.params.code !== processedCodeRef.current) {
+      processedCodeRef.current = result.params.code;
       exchangeCodeForToken(result.params.code);
     }
   }, [result, request]);

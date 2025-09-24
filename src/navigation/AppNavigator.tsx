@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { TrainingPlansScreen } from '../screens/TrainingPlansScreen';
@@ -44,6 +45,8 @@ const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const MainTabs = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -66,9 +69,9 @@ const MainTabs = () => {
           backgroundColor: Theme.surfaceElevated,
           borderTopColor: Theme.border,
           borderTopWidth: 1,
-          paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingTop: 10,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+          height: 60 + (insets.bottom > 0 ? insets.bottom : 0),
         },
         headerStyle: {
           backgroundColor: Theme.surface,
@@ -87,17 +90,17 @@ const MainTabs = () => {
       <Tab.Screen
         name="Training"
         component={TrainingPlansScreen}
-        options={{ title: 'My Training Plans' }}
+        options={{ title: 'My Training Plans', tabBarLabel: 'Training' }}
       />
       <Tab.Screen
         name="Meals"
         component={MealPlansScreen}
-        options={{ title: 'My Meal Plans' }}
+        options={{ title: 'My Meal Plans', tabBarLabel: 'Meal' }}
       />
       <Tab.Screen
         name="Account"
         component={AccountScreen}
-        options={{ title: 'My Account' }}
+        options={{ title: 'My Account', tabBarLabel: 'Account' }}
       />
     </Tab.Navigator>
   );
